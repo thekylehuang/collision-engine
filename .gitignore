@@ -1,0 +1,26 @@
+# ===== Build folders =====
+build/
+bin/
+lib/
+
+# ===== CMake files =====
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+*.cmake
+
+# ===== IDE/Editor files =====
+.vscode/
+.idea/
+*.sln
+*.vcxproj*
+*.user
+*.suo
+*.DS_Store
+
+# ===== Logs & Temp =====
+*.log
+*.tmp
+*.bak
+*.swp
