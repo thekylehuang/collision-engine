@@ -1,4 +1,4 @@
-name: CMake Multi-Platform Build with Conan
+name: Build on macOS
 
 on:
   push:
@@ -7,55 +7,30 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: windows-latest
-            c_compiler: cl
-            cpp_compiler: cl
-          - os: ubuntu-latest
-            c_compiler: gcc
-            cpp_compiler: g++
-          - os: ubuntu-latest
-            c_compiler: clang
-            cpp_compiler: clang++
-
-    runs-on: ${{ matrix.os }}
+  build-macos:
+    runs-on: macos-latest
 
     steps:
-    # 1. Checkout repo
-    - uses: actions/checkout@v4
+      # 1. Checkout repo
+      - uses: actions/checkout@v4
 
-    # 2. Install Python (needed for Conan) and Conan
-    - name: Install Python & Conan
-      if: runner.os == 'Windows'
-      run: |
-        choco install python -y
-        pip install --upgrade conan
-    - name: Install Conan on Linux
-      if: runner.os == 'Linux'
-      run: pip install --upgrade conan
+      # 2. Install Homebrew and Conan
+      - name: Install Conan
+        run: |
+          brew install conan
 
-    # 3. Detect Conan profile
-    - name: Conan profile detect
-      run: conan profile detect --force
+      # 3. Detect Conan profile
+      - name: Detect Conan profile
+        run: conan profile detect --force
 
-    # 4. Install dependencies with Conan
-    - name: Conan install dependencies
-      run: conan install . --output-folder=build --build=missing
+      # 4. Install dependencies with Conan
+      - name: Conan install
+        run: conan install . --output-folder=build --build=missing
 
-    # 5. Configure CMake
-    - name: Configure CMake
-      run: |
-        cmake -B build \
-        -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
-        -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
-        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-        -S .
+      # 5. Configure project with CMake preset
+      - name: CMake configure
+        run: cmake --preset conan-release
 
-
-    # 6. Build project
-    - name: Build
-      run: cmake --build build --config ${{ matrix.build_type }}
+      # 6. Build project with CMake preset
+      - name: CMake build
+        run: cmake --build --preset conan-release
