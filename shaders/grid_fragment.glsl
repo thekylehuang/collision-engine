@@ -14,7 +14,7 @@ void main()
   uv.x *= iResolution.x / iResolution.y;
 
   // Main Grid
-  float gridSize = 175.0;
+  float gridSize = 87.0;
   float gridStroke = 2.0;
 
   vec2 localPos = mod(fragCoord.xy, gridSize);
