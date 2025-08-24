@@ -7,4 +7,6 @@ find_package(glad)
 
 add_executable(gravity_engine src/main.cpp src/shader.cpp)
 
+target_include_directories(gravity_engine PRIVATE ${PROJECT_SOURCE_DIR}/include)
+
 target_link_libraries(gravity_engine PRIVATE fmt::fmt glfw glad::glad)

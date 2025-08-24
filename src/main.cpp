@@ -20,9 +20,8 @@ struct circle {
 };
 
 // Initial window conditions
-int initialWidth = 800;
-int initialHeight = 600;
-float aspect = (float)initialWidth / (float)initialHeight;
+int currentWidth = 2240;
+int currentHeight = 1205;
 
 // Prototyping functions
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -34,7 +33,7 @@ int main() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(initialWidth, initialHeight, "The Kyle Huang Engine", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(currentWidth, currentHeight, "The Kyle Huang Engine", NULL, NULL);
     if (!window) {
         fmt::print(stderr, "Failed to create window.\n");
         glfwTerminate();
@@ -47,13 +46,24 @@ int main() {
         fmt::print(stderr, "Failed to initialize GLAD.\n");
         return -1;
     }
-    glViewport(0,0,initialWidth,initialHeight);
+    glViewport(0,0,currentWidth,currentHeight);
     
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     // Scaling the units so that 1.0f normalized coords is 25 meters
     float scale = 1.0f / 25.0f;
     
+    // Fullscreen quad for grid
+    float quad[] = {
+        -1.0f, 1.0f, 1.0f,
+        -1.0f, -1.0f, 1.0f,
+        1.0f, -1.0f, 1.0f,
+
+        -1.0f, 1.0f, 1.0f,
+        1.0f, -1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f
+    };
+
     // Draw a circle
     circle circle  ={.x=0.0f, .y=0.5f, .vx=0.0f, .vy=0.0f, .radius=5.0f * scale, .resolution=512};
     const float gravity = -9.80665f * scale;
@@ -66,7 +76,7 @@ int main() {
 
     for (int i = 0; i <= circle.resolution + 1; ++i) {
         // The angle increment is equal to 2pi divided by number of segments.
-        float angle = (i-1) * 2.0f * M_PI / circle.resolution;
+        float angle = (i) * 2.0f * M_PI / circle.resolution;
         // Using polar coordinates
         float x = cos(angle) * circle.radius;
         float y = sin(angle) * circle.radius;
@@ -77,74 +87,82 @@ int main() {
         circleVertices.push_back(z);
     }
 
-    // VAO and VBO creation and binding
-    GLuint VAO, VBO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    // Quad
+    GLuint quadVAO, quadVBO;
+    glGenVertexArrays(1, &quadVAO);
+    glGenBuffers(1, &quadVBO);
+    glBindVertexArray(quadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quad), quad, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+    // Circle
+    GLuint circleVAO, circleVBO;
+    glGenVertexArrays(1, &circleVAO);
+    glGenBuffers(1, &circleVBO);
+    glBindVertexArray(circleVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, circleVBO);
     glBufferData(GL_ARRAY_BUFFER, circleVertices.size() * sizeof(float), circleVertices.data(), GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
-    // Vertex and Fragment setup
-    std::string vertexSource = readShaderFile("../shaders/vertex.glsl");
-    std::string fragmentSource = readShaderFile("../shaders/fragment.glsl");
-    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 
-    const char* vertexSourceCStr = vertexSource.c_str();
-    const char* fragmentSourceCStr = fragmentSource.c_str();
-    glShaderSource(vertexShader, 1, &vertexSourceCStr, nullptr);
-    glShaderSource(fragmentShader, 1, &fragmentSourceCStr, nullptr);
+    GLuint circleShaderProgram = compileShaderProgram(
+        "../shaders/circle_vertex.glsl",
+        "../shaders/circle_fragment.glsl"
+    );
 
-    glCompileShader(vertexShader);
-    glCompileShader(fragmentShader);
+    GLuint gridShaderProgram = compileShaderProgram(
+        "../shaders/grid_vertex.glsl",
+        "../shaders/grid_fragment.glsl"
+    );
 
-    // Shader program
-    GLuint shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-    glUseProgram(shaderProgram);
-
-    GLuint aspectLoc = glGetUniformLocation(shaderProgram, "aspect");
+    GLuint aspectLoc = glGetUniformLocation(circleShaderProgram, "aspect");
+    GLuint circlePosLoc = glGetUniformLocation(circleShaderProgram, "circlePos");
+    GLuint resLocGrid = glGetUniformLocation(gridShaderProgram, "iResolution");
+    GLuint resLocCircle = glGetUniformLocation(circleShaderProgram, "iResolution");
 
     float prevTime = glfwGetTime();
 
-    // Loop running every frame
+    // Frame loop
     while (!glfwWindowShouldClose(window)) {
-        // Time between each frame
         float currentTime = glfwGetTime();
         float deltaTime = currentTime - prevTime;
         prevTime = currentTime;
 
-        // Physics running every timestep
         circle.vy += gravity * deltaTime;
         circle.y += circle.vy * deltaTime;
 
-        // Collision checks
         if (circle.y - circle.radius < -1.0f) {
             circle.y = -1.0f + circle.radius;
             circle.vy *= -1.0f;
         }
-        circleVertices[1] = circle.y;
-        for (int i = 1; i <= circle.resolution + 1; ++i) {
-            // The y coordinate
-            int indexY = i * 3 + 1;
-            // Update vertices
-            float angle = (i-1) * 2.0f * M_PI / circle.resolution;
-            circleVertices[indexY] = sin(angle) * circle.radius + circle.y;
-            circleVertices[indexY - 1] = cos(angle) * circle.radius + circle.x;
-        }
+
         glClearColor(0.0627450980f, 0.0705882353f, 0.0784313725f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-        glUseProgram(shaderProgram);
-        glUniform1f(aspectLoc, aspect);
-        glBindVertexArray(VAO);
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, circleVertices.size() * sizeof(float), circleVertices.data());
+
+        // Grid
+        glUseProgram(gridShaderProgram);
+        glUniform2f(resLocGrid, (float)currentWidth, (float)currentHeight);
+        glBindVertexArray(quadVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindVertexArray(0);
+
+        // Circle
+        glUseProgram(circleShaderProgram);
+        glUniform2f(resLocCircle, (float)currentWidth, (float)currentHeight);
+        glUniform2f(circlePosLoc, circle.x, circle.y);
+
+        glBindVertexArray(circleVAO);
         glDrawArrays(GL_TRIANGLE_FAN, 0, circle.resolution + 2);
+        glBindVertexArray(0);
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
@@ -157,6 +175,6 @@ int main() {
 // Window Resize Function
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
-    aspect = (float)width / (float)height;
-    fmt::print("Aspect Ratio: {}\n", aspect);
+    currentWidth = width;
+    currentHeight = height;
 }
