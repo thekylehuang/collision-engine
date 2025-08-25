@@ -1,7 +1,7 @@
 # The Kyle Huang Engine
 ![Build](https://img.shields.io/github/actions/workflow/status/thekylehuang/gravity-engine/cmake-multi-platform.yml)
 
-This is a 2d physics engine built fully in C++ and OpenGL. It is cross platform (CMake), and extremely simple to build, as we're using the Conan package manager. This engine uses the Fourth Order Runge Kutta method for simulating n-body gravity. A body can be spawned by clicking in the window. Collisions are supported by the engine.
+This is a 2d physics engine built fully in C++ and OpenGL. It is cross platform (CMake), and extremely simple to build, as we're using the Conan package manager. A body can be spawned by clicking in the window. Collisions are supported by the engine.
 # Libraries used
 - GLFW (For window and input handling)
 - GLAD (For loading OpenGL Functions)
@@ -32,8 +32,8 @@ brew cmake conan
 ## Build Instructions
 First, clone the repository and make it your working directory.
 ```bash
-git clone https://github.com/thekylehuang/gravity-engine.git
-cd gravity-engine
+git clone https://github.com/thekylehuang/collision-engine.git
+cd collision-engine
 ```
 If you haven't used Conan before, you'll need it to detect your system profile with
 ```bash
@@ -49,7 +49,7 @@ cd build
 cmake --preset conan-release
 cmake --build --preset conan-release
 ```
-Wait a moment, and it will generate a file called "gravity_engine.exe". You can now run it with
+Wait a moment, and it will generate a file called "collision_engine.exe". You can now run it with
 ```bash
-./gravity_engine
+./collision_engine
 ```

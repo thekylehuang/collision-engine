@@ -62,7 +62,7 @@ int main() {
 
     // Window icon
     int iconWidth, iconHeight, iconChannels;
-    unsigned char* iconPixels = stbi_load("../assets/gravity-engine-icon.png", &iconWidth, &iconHeight, &iconChannels, 4);
+    unsigned char* iconPixels = stbi_load("../assets/collision-engine-icon.png", &iconWidth, &iconHeight, &iconChannels, 4);
     GLFWimage icon;
     icon.width = iconWidth;
     icon.height = iconHeight;
@@ -146,6 +146,53 @@ int main() {
 
     // Frame loop
     while (!glfwWindowShouldClose(window)) {
+        float currentTime = glfwGetTime();
+        float deltaTime = currentTime - prevTime;
+        prevTime = currentTime;
+        if (!circles.empty()) {
+            for (Circle& circle : circles) {
+                circle.x += circle.vx * deltaTime;
+                circle.y += circle.vy * deltaTime;
+            }
+            
+            for (size_t i = 0; i < circles.size(); ++i) {
+                for (size_t j = i + 1; j < circles.size(); ++j) {
+                    circles[i].applyCollision(circles[j]);
+                }
+            }
+
+            for (Circle& circle : circles) {
+                // Left and right borders
+                if (circle.x - circle.radius < -1.0f) {
+                    circle.x = -1.0f + circle.radius;
+                    circle.vx = -circle.vx;
+                }
+                if (circle.x + circle.radius > 1.0f) {
+                    circle.x = 1.0f - circle.radius;
+                    circle.vx = -circle.vx;
+                }
+                
+                // Top and bottom borders
+                if (circle.y - circle.radius < -1.0f) {
+                    circle.y = -1.0f + circle.radius;
+                    circle.vy = -circle.vy;
+                }
+                if (circle.y + circle.radius > 1.0f) {
+                    circle.y = 1.0f - circle.radius;
+                    circle.vy = -circle.vy;
+                }
+            }
+
+            std::vector<float> instanceData;
+            instanceData.reserve(circles.size() * 2);
+            for (const Circle& c : circles) {
+                instanceData.push_back(c.x);
+                instanceData.push_back(c.y);
+            }
+            glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+            glBufferSubData(GL_ARRAY_BUFFER, 0, instanceData.size() * sizeof(float), instanceData.data());
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+        }
         glClear(GL_COLOR_BUFFER_BIT);
 
         // Update aspect ratio
