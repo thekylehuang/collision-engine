@@ -1,7 +1,9 @@
 # The Kyle Huang Engine
-![Build](https://img.shields.io/github/actions/workflow/status/thekylehuang/gravity-engine/cmake-multi-platform.yml)
+![Build](https://img.shields.io/github/actions/workflow/status/thekylehuang/collision-engine/cmake-multi-platform.yml)
 
 This is a 2d physics engine built fully in C++ and OpenGL. It is cross platform (CMake), and extremely simple to build, as we're using the Conan package manager. A body can be spawned by clicking in the window. Collisions are supported by the engine.
+# Demo
+![Demo](assets/demo.gif)
 # Libraries used
 - GLFW (For window and input handling)
 - GLAD (For loading OpenGL Functions)
