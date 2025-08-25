@@ -47,9 +47,9 @@ conan install . --output-folder=build --build=missing
 ```
 This has Conan install all the libraries this engine uses into the build folder. It also makes a CMake preset called "conan-release". To set that preset, run the following commands:
 ```bash
-cd build
 cmake --preset conan-release
 cmake --build --preset conan-release
+cd build
 ```
 Wait a moment, and it will generate a file called "collision_engine.exe". You can now run it with
 ```bash
