@@ -1,13 +1,11 @@
 #version 330 core
-layout (location = 0) in vec3 aPos;
+layout(location = 0) in vec3 aPos;
+layout(location = 1) in vec2 instancePos;
 
-uniform vec2 circlePos;
-uniform vec2 iResolution;
+uniform float aspectRatio;
 
-void main()
-{
-    vec3 pos = aPos;
-    pos.x /= iResolution.x / iResolution.y;
-    pos.xy += circlePos;
-    gl_Position = vec4(pos, 1.0);
+void main() {
+    vec3 scaledPos = aPos;
+    scaledPos.x /= aspectRatio;
+    gl_Position = vec4(scaledPos.xy + instancePos, 0.0, 1.0);
 }

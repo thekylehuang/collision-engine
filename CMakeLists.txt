@@ -5,7 +5,7 @@ find_package(fmt REQUIRED)
 find_package(glfw3)
 find_package(glad)
 
-add_executable(gravity_engine src/main.cpp src/shader.cpp src/buffer_utils.cpp)
+add_executable(gravity_engine src/main.cpp src/shader.cpp src/buffer_utils.cpp src/circle.cpp)
 
 target_include_directories(gravity_engine PRIVATE ${PROJECT_SOURCE_DIR}/include)
 

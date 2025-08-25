@@ -4,8 +4,7 @@ out vec4 FragColor;
 
 uniform vec2 iResolution;
 
-void main()
-{
+void main() {
   // Shadertoy type boilerplate
   vec2 fragCoord = gl_FragCoord.xy;
   vec2 uv = fragCoord / iResolution.xy;
